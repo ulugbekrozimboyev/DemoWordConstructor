@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="text/javascript" src="jquery-1.10.2.min.js"></script>
+
+    <style type="text/css">
+
+        .template {
+            display: none;
+        }
+
+        .character_field {
+            width: 25px;
+            line-height: 20px;
+            margin: 5px;
+            border: 2px solid #5F4B4B;
+            text-align: center;
+            font-size: 20px;
+            color: rgb(250, 81, 81);
+        }
+
+        .disable {
+            color: #B5B5B5;
+        }
+
+        .numeric {
+            width: 25px;
+            height: 25px;
+            text-align: center;
+            border-radius: 16px;
+            background: #AEABAB;
+            margin: 5px;
+            position: relative;
+        }
+        .numeric span {
+            position: absolute;
+            top: 17%;
+            left: 36%;
+        }
+
+        .test_items_numbers {
+            text-align: center;
+        }
+
+        .test_content .numeric {
+            display: inline-block;
+        }
+
+        .correct {
+            background: green;
+        }
+        .incorrect {
+            background: rgb(255, 105, 105);
+        }
+
+    </style>
+
+    <title></title>
+</head>
+<body>
+
+<input type="text" class="template" maxlength="1">
+<div class="template numeric"><span>1</span></div>
+
+<div class="test_content">
+    <div class="test_items_numbers"></div>
+    <h2 class="title">Title</h2>
+    <div class="inputs_group">
+        body
+    </div>
+    <div class="buttons">
+        <button class="next_button disable">
+            Next
+        </button>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    // usualy sampleDictinary must get from server
+    var sampleDictinary = {
+        wordUz: ['salom', 'yer', 'quyosh'],
+        wordEn: ['hello', 'earth', 'sun']
+    }
+
+    var self = {};
+    self.beginWiht = 0;
+
+    sampleDictinary.answers = Array(sampleDictinary.wordEn.length);
+
+
+
+    // test is began
+    function beginTest(dic, beginWiht){
+
+        for(var index = beginWiht; dic.wordUz.length >  index; index++  ){
+//            console.log(dic.wordEn[index] + ' - ' + dic.wordUz[index]);
+            // call test only dictinary has word enlish version and uzbek version
+            if(dic.wordUz[index] && dic.wordEn[index]){
+                doSingleTest(dic.wordEn[index], dic.wordUz[index]);
+                self.beginWiht++;
+                break; // TODO
+            }
+        }
+
+    }
+
+    function doSingleTest(wordEn, wordUz){
+        $('.title').text(wordUz);
+        createInputGroup(wordEn);
+    }
+
+    function createInputGroup(word){
+
+        // set current word as global value
+        self.currentWord = word;
+
+        // off old binding actions
+        $('.inputs_group').off('keypress', 'input');
+
+        $('.inputs_group').empty();
+//        console.log(word);
+//        console.log(word.length);
+        for(var i = 0; word.length > i; i++ ){
+            var inputTmp = $('input.template').clone();
+            inputTmp.prop('id', i);
+            inputTmp.removeClass('template');
+            inputTmp.addClass('character_field');
+            $('.inputs_group').append(inputTmp);
+        }
+
+        // bind old binding actions
+        $('.inputs_group').on('keypress', 'input', handleKeyPress);
+
+        // focus first input
+        $('.inputs_group input:first').focus();
+
+    }
+
+    function handleKeyPress(event){
+        var currentId = $(this).prop('id');
+//        console.log(currentId);
+//        console.log(event.which);
+//        console.log(String.fromCharCode(event.which));
+//        console.log(self.currentWord[currentId]);
+
+        if(String.fromCharCode(event.which) == self.currentWord[currentId]){
+
+            if($(this).next().length ){
+                $(this).next().focus();
+            } else {
+                $('body .next_button').removeClass('disable');
+                $(this).focusout();
+            }
+
+            if(sampleDictinary.answers[self.beginWiht-1] == null){
+                sampleDictinary.answers[self.beginWiht-1] = true;
+            }
+
+            return true;
+        }
+
+        sampleDictinary.answers[self.beginWiht-1] = false;
+
+        return false;
+    }
+
+    // put numbers to title
+    function putNumericCircles(count){
+        for(var i =0; i < count; i++ ){
+            var tmp = $('.template.numeric').clone();
+            tmp.prop('id', 'numeric_' + i );
+            tmp.find('span').text(i+1);
+            tmp.removeClass('template');
+            $('.test_items_numbers').append(tmp);
+        }
+    }
+
+    function goToNextTest(){
+        beginTest(sampleDictinary, self.beginWiht);
+        $('body .next_button').addClass('disable');
+    }
+
+    function setCutrrentTestStatus(id, status){
+         var item = $('.test_content .numeric#numeric_'+id);
+         if(status){
+             item.addClass('correct');
+         } else {
+             item.addClass('incorrect');
+
+         }
+    }
+
+
+
+    // here work began with all above functions
+
+    $('body').on('click', '.next_button',function(){
+        if(!$(this).hasClass('disable')){
+            setCutrrentTestStatus(self.beginWiht-1, sampleDictinary.answers[self.beginWiht-1]);
+            goToNextTest();
+        }
+    });
+
+    putNumericCircles(sampleDictinary.wordEn.length);
+
+    beginTest(sampleDictinary, self.beginWiht);
+
+</script>
+</body>
+</html>
